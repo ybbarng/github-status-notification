@@ -9,6 +9,8 @@ import json
 import arrow
 from scrapy.exceptions import DropItem
 
+from github_status_notification import slack
+
 
 DATABASE = 'messages.jl'
 KEY_TIMESTAMP = 't'
@@ -70,7 +72,8 @@ class NotifiablePipeline(object):
 class SlackPipeline(object):
 
     def process_item(self, item, spider):
-        timestamp = arrow.get(item['timestamp']).to('Asia/Seoul').format('HH:MM')
+        timestamp = arrow.get(item['timestamp']).to('Asia/Seoul').format('hh:mm A') + ' (KST)'
         print('Send to slack : {} {} {}'.format(timestamp, item['status'], item['text']))
+        slack.write(timestamp, item['status'], item['text'])
         return item
 
