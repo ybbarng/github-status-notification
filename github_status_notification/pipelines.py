@@ -6,6 +6,7 @@
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import json
 
+import arrow
 from scrapy.exceptions import DropItem
 
 
@@ -69,6 +70,7 @@ class NotifiablePipeline(object):
 class SlackPipeline(object):
 
     def process_item(self, item, spider):
-        print('Send to slack : {} {} {}'.format(item['timestamp'], item['status'], item['text']))
+        timestamp = arrow.get(item['timestamp']).to('Asia/Seoul').format('HH:MM')
+        print('Send to slack : {} {} {}'.format(timestamp, item['status'], item['text']))
         return item
 
