@@ -6,8 +6,8 @@ class GithubStatusSpider(scrapy.Spider):
     custom_settings = {
         'ITEM_PIPELINES': {
             'github_status_notification.pipelines.DataTidyPipeline': 1,
-            'github_status_notification.pipelines.NewMessagePipeline': 2,
-            'github_status_notification.pipelines.JsonWriterPipeline': 3,
+            'github_status_notification.pipelines.JsonWriterPipeline': 2,
+            'github_status_notification.pipelines.NewMessagePipeline': 3,
             'github_status_notification.pipelines.NotifiablePipeline': 4,
             'github_status_notification.pipelines.SlackPipeline': 5,
         }

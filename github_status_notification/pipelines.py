@@ -16,6 +16,19 @@ DATABASE = 'messages.jl'
 KEY_TIMESTAMP = 't'
 KEY_STATUS = 's'
 
+notified = set()
+
+def load_database(spider):
+    spider.latest_status = 'good'
+    try:
+        with open(DATABASE, 'r') as f:
+            for line in f:
+                log = json.loads(line)
+                notified.add(log[KEY_TIMESTAMP])
+                spider.latest_status = log[KEY_STATUS]
+    except FileNotFoundError:
+        pass
+
 
 class DataTidyPipeline(object):
     def process_item(self, item, spider):
@@ -26,22 +39,10 @@ class DataTidyPipeline(object):
 
 class NewMessagePipeline(object):
 
-    def open_spider(self, spider):
-        self.notified = set()
-        spider.latest_status = 'good'
-        try:
-            with open(DATABASE, 'r') as f:
-                for line in f:
-                    log = json.loads(line)
-                    self.notified.add(log[KEY_TIMESTAMP])
-                    spider.latest_status = log[KEY_STATUS]
-        except FileNotFoundError:
-            pass
-
     def process_item(self, item, spider):
-        if item['timestamp'] in self.notified:
+        if item['timestamp'] in notified:
             raise DropItem('Already notified')
-        self.notified.add(item['timestamp'])
+        notified.add(item['timestamp'])
 
         return item
 
@@ -49,7 +50,8 @@ class NewMessagePipeline(object):
 class JsonWriterPipeline(object):
 
     def open_spider(self, spider):
-        self.file = open(DATABASE, 'a+')
+        load_database(spider)
+        self.file = open(DATABASE, 'w+')
 
     def close_spider(self, spider):
         self.file.close()
