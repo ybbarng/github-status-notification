@@ -47,7 +47,7 @@ def write(timestamp, status, message):
     }
     response = requests.post(webhook_url, headers=headers, data=json.dumps(payload))
     if response.status_code != 200:
-        raise ValueError('Request to slack returned an error: (%d, %s)'.format(response.status_code, response.text))
+        raise ValueError('Request to slack returned an error: ({}, {})'.format(response.status_code, response.text))
 
 if __name__ == '__main__':
     write('12:45', 'good', 'All systems reporting at 100%')
