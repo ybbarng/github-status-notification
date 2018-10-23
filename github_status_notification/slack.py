@@ -8,6 +8,8 @@ webhook_url = os.getenv('SLACK_WEBHOOK_URL')
 
 
 def write(timestamp, status, message):
+    if not webhook_url:
+        raise ValueError('Invalid slack webook_url: {}'.format(webhook_url))
     colors = {
         'good': 'good',
         'minor': 'warning',

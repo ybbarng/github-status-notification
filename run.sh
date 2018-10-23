@@ -1,5 +1,6 @@
 #! /bin/bash
 
+export SLACK_WEBHOOK_URL=
 export PATH_TO_GSN=/PATH/TO/github-status-notification/
 export PATH_TO_GSN_SCRAPY=/PATH/TO/VENV/bin/
 
