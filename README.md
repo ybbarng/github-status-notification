@@ -18,12 +18,24 @@ Notify to slack when the following:
 
 ## How to Use
 1. Clone this project
-```
-git clone ...
+```sh
+git clone https://github.com/ybbarng/github-status-notification.git
 ```
 2. Install dependencies
+```sh
+pip install -r requirements.txt
+```
 
-3. Modify the [run.sh](run.sh) to set the variable `SLACK_WEBHOOK_URL`
+3. Modify the [run.sh](run.sh) to set the variables
+
+ex)
+```sh
+...
+export SLACK_WEBHOOK_URL=https://hooks.slack.com/services/ABC/DEF/GHI
+export PATH_TO_GSN=/Users/me/github-status-notification/
+export PATH_TO_GSN_SCRAPY=/Users/me/.virtualenvs/github-status-notification/bin/
+...
+```
 
 4. add crontab
 ```
