@@ -11,8 +11,9 @@ Notify to slack when the following:
 
 ## Dependencies
 * Python 3.7
-* [Scrapy](https://scrapy.org/)
 * [arrow](https://github.com/crsmithdev/arrow)
+* [requests](http://docs.python-requests.org/en/master/)
+* [Scrapy](https://scrapy.org/)
 
 
 ## How to Use
