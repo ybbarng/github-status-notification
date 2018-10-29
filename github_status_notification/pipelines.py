@@ -5,6 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 import json
+import logging
 
 import arrow
 from scrapy.exceptions import DropItem
@@ -43,7 +44,6 @@ class NewMessagePipeline(object):
         if item['timestamp'] in notified:
             raise DropItem('Already notified')
         notified.add(item['timestamp'])
-
         return item
 
 
@@ -66,7 +66,7 @@ class NotifiablePipeline(object):
 
     def process_item(self, item, spider):
         if item['status'] == spider.latest_status == 'good':
-            raise DropItem('Stable status')
+            raise DropItem('Stable status: old == new == \'good\'')
         spider.latest_status = item['status']
         return item
 
@@ -75,7 +75,7 @@ class SlackPipeline(object):
 
     def process_item(self, item, spider):
         timestamp = arrow.get(item['timestamp']).to('Asia/Seoul').format('hh:mm A') + ' (KST)'
-        print('Send to slack : {} {} {}'.format(timestamp, item['status'], item['text']))
+        logging.info('Send to slack : {} {} {}'.format(timestamp, item['status'], item['text']))
         slack.write(timestamp, item['status'], item['text'])
         return item
 
