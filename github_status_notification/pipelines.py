@@ -13,7 +13,7 @@ from scrapy.exceptions import DropItem
 from github_status_notification import slack
 
 
-DATABASE = 'messages.jl'
+DATABASE = 'messages.json'
 KEY_TIMESTAMP = 't'
 KEY_STATUS = 's'
 
@@ -47,30 +47,33 @@ class NewMessagePipeline(object):
         return item
 
     def load_database(self):
+        database = []
         try:
             with open(DATABASE, 'r') as f:
-                for line in f:
-                    log = json.loads(line)
-                    self.notified.add(log[KEY_TIMESTAMP])
-                    self.latest_status = log[KEY_STATUS]
+                database = json.load(f)
         except FileNotFoundError:
             pass
+
+        for entry in database:
+            self.notified.add(entry[KEY_TIMESTAMP])
+            self.latest_status = entry[KEY_STATUS]
 
 
 class JsonWriterPipeline(object):
 
-    items = []
+    database = []
 
     def close_spider(self, spider):
-        if len(self.items):
+        if len(self.database):
             with open(DATABASE, 'w+') as f:
-                for item in self.items:
-                    line = json.dumps({KEY_TIMESTAMP: item['timestamp'], KEY_STATUS: item['status']}) + '\n'
-                    f.write(line)
+                json.dump(self.database, f)
 
     def process_item(self, item, spider):
-        self.items.append(item)
+        self.database.append(self.to_database_entry(item))
         return item
+
+    def to_database_entry(self, item):
+        return {KEY_TIMESTAMP: item['timestamp'], KEY_STATUS: item['status']}
 
 
 class SlackPipeline(object):
