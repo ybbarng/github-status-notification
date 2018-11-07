@@ -17,19 +17,6 @@ DATABASE = 'messages.jl'
 KEY_TIMESTAMP = 't'
 KEY_STATUS = 's'
 
-notified = set()
-
-def load_database(spider):
-    spider.latest_status = 'good'
-    try:
-        with open(DATABASE, 'r') as f:
-            for line in f:
-                log = json.loads(line)
-                notified.add(log[KEY_TIMESTAMP])
-                spider.latest_status = log[KEY_STATUS]
-    except FileNotFoundError:
-        pass
-
 
 class DataTidyPipeline(object):
     def process_item(self, item, spider):
@@ -40,42 +27,58 @@ class DataTidyPipeline(object):
 
 class NewMessagePipeline(object):
 
+    notified = set()
+    latest_status = 'good'
+
+    def open_spider(self, spider):
+        self.load_database()
+
     def process_item(self, item, spider):
-        if item['timestamp'] in notified:
+        if item['timestamp'] in self.notified:
             raise DropItem('Already notified')
-        notified.add(item['timestamp'])
+
+        if item['status'] == self.latest_status == 'good':
+            logging.info('Stable status: old == new == \'good\'')
+            item['notifiable'] = False
+        else:
+            item['notifiable'] = True
+        self.notified.add(item['timestamp'])
+        self.latest_status = item['status']
         return item
+
+    def load_database(self):
+        try:
+            with open(DATABASE, 'r') as f:
+                for line in f:
+                    log = json.loads(line)
+                    self.notified.add(log[KEY_TIMESTAMP])
+                    self.latest_status = log[KEY_STATUS]
+        except FileNotFoundError:
+            pass
 
 
 class JsonWriterPipeline(object):
 
-    def open_spider(self, spider):
-        load_database(spider)
-        self.file = open(DATABASE, 'w+')
+    items = []
 
     def close_spider(self, spider):
-        self.file.close()
+        if len(self.items):
+            with open(DATABASE, 'w+') as f:
+                for item in self.items:
+                    line = json.dumps({KEY_TIMESTAMP: item['timestamp'], KEY_STATUS: item['status']}) + '\n'
+                    f.write(line)
 
     def process_item(self, item, spider):
-        line = json.dumps({KEY_TIMESTAMP: item['timestamp'], KEY_STATUS: item['status']}) + '\n'
-        self.file.write(line)
-        return item
-
-
-class NotifiablePipeline(object):
-
-    def process_item(self, item, spider):
-        if item['status'] == spider.latest_status == 'good':
-            raise DropItem('Stable status: old == new == \'good\'')
-        spider.latest_status = item['status']
+        self.items.append(item)
         return item
 
 
 class SlackPipeline(object):
 
     def process_item(self, item, spider):
-        timestamp = arrow.get(item['timestamp']).to('Asia/Seoul').format('hh:mm A') + ' (KST)'
-        logging.info('Send to slack : {} {} {}'.format(timestamp, item['status'], item['text']))
-        slack.write(timestamp, item['status'], item['text'])
+        if item['notifiable']:
+            timestamp = arrow.get(item['timestamp']).to('Asia/Seoul').format('hh:mm A') + ' (KST)'
+            logging.info('Send to slack : {} {} {}'.format(timestamp, item['status'], item['text']))
+            slack.write(timestamp, item['status'], item['text'])
         return item
 

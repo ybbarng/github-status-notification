@@ -8,12 +8,9 @@ class GithubStatusSpider(scrapy.Spider):
             'github_status_notification.pipelines.DataTidyPipeline': 1,
             'github_status_notification.pipelines.JsonWriterPipeline': 2,
             'github_status_notification.pipelines.NewMessagePipeline': 3,
-            'github_status_notification.pipelines.NotifiablePipeline': 4,
-            'github_status_notification.pipelines.SlackPipeline': 5,
+            'github_status_notification.pipelines.SlackPipeline': 4,
         }
     }
-
-    latest_status = None
 
     def start_requests(self):
         urls = ['https://status.github.com/messages']
